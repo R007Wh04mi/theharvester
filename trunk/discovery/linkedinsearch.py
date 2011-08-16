@@ -1,6 +1,6 @@
 import string
 import httplib, sys
-import parser
+import myparser
 import re
 
 class search_linkedin:
@@ -34,7 +34,7 @@ class search_linkedin:
 		return nexty
 		
 	def get_people(self):
-		rawres=parser.parser(self.totalresults,self.word)
+		rawres=myparser.parser(self.totalresults,self.word)
 		return rawres.people_linkedin()
 	
 	def process(self):

@@ -1,6 +1,6 @@
 import string
 import httplib, sys
-import parser
+import myparser
 
 class search_pgp:
 	def __init__(self,word):
@@ -21,11 +21,11 @@ class search_pgp:
 		
 		
 	def get_emails(self):
-		rawres=parser.parser(self.results,self.word)
+		rawres=myparser.parser(self.results,self.word)
 		return rawres.emails()
 	
 	def get_hostnames(self):
-		rawres=parser.parser(self.results,self.word)
+		rawres=myparser.parser(self.results,self.word)
 		return rawres.hostnames()
 	
 	
