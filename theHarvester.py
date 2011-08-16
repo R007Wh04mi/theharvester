@@ -6,8 +6,8 @@ from socket import *
 import re
 import getopt
 from discovery import *
-import hostchecker
-
+from lib import htmlExport
+from lib import hostchecker
 
 print "\n*************************************"
 print "*TheHarvester Ver. 2.0 (reborn)     *"
@@ -22,10 +22,15 @@ def usage():
  print "       -d: Domain to search or company name"
  print "       -b: Data source (google,bing,bingapi,pgp,linkedin,google-profiles,exalead,all)"
  print "       -s: Start in result number X (default 0)"
- print "       -v: Verify host name via dns resolution and search for vhosts(basic)"
+ print "       -v: Verify host name via dns resolution and search for virtual hosts"
+ print "       -f: Save the results into an HTML and XML file"
+ print "       -n: Perform a DNS reverse query on all ranges discovered"
+ print "       -c: Perform a DNS brute force for the domain name"
+ print "       -t: Perform a DNS TLD expansion discovery"
+ print "       -e: Use this DNS server"
  print "       -l: Limit the number of results to work with(bing goes from 50 to 50 results,"
- print "            google 100 to 100, and pgp does'nt use this option)"
- print "       -f: Save the results into an XML file"
+ print "	   -h: use SHODAN database to query discovered hosts"
+ print "            google 100 to 100, and pgp doesn't use this option)"
  print "\nExamples:./theharvester.py -d microsoft.com -l 500 -b google"
  print "         ./theharvester.py -d microsoft.com -b pgp"
  print "         ./theharvester.py -d microsoft -l 200 -b linkedin\n"
@@ -36,7 +41,7 @@ def start(argv):
 		usage()
 		sys.exit()
 	try :
-	       opts, args = getopt.getopt(argv, "l:d:b:s:v:f:")
+	       opts, args = getopt.getopt(argv, "l:d:b:s:vf:nhcte:")
 	except getopt.GetoptError:
   	     	usage()
 		sys.exit()
@@ -44,7 +49,14 @@ def start(argv):
 	host_ip=[]
 	filename=""
 	bingapi="yes"
-	start=0
+	dnslookup=False
+	dnsbrute=False
+	dnstld=False
+	shodan=False
+	vhost=[]
+	virtual=False
+	limit = 100
+	dnsserver=False
 	for opt, arg in opts:
 		if opt == '-l' :
 			limit = int(arg)
@@ -53,9 +65,19 @@ def start(argv):
 		elif opt == '-s':
 			start = int(arg)
 		elif opt == '-v':
-			virtual = arg
+			virtual = "basic"
 		elif opt == '-f':
 			filename= arg
+		elif opt == '-n':
+			dnslookup=True
+		elif opt == '-c':
+			dnsbrute=True
+		elif opt == '-h':
+			shodan=True
+		elif opt == '-e':
+			dnsserver=arg
+		elif opt == '-t':
+			dnstld=True
 		elif opt == '-b':
 			engine = arg
 			if engine not in ("google", "linkedin", "pgp", "all","google-profiles","exalead","bing","bing_api","yandex"):
@@ -138,7 +160,7 @@ def start(argv):
 		all_hosts.extend(hosts)
 		all_emails.extend(emails)
 		print "[-] Searching in Bing.."
-		bingapi="yes"
+		bingapi="no"
 		search=bingsearch.search_bing(word,limit,start)
 		search.process(bingapi)
 		emails=search.get_emails()
@@ -152,32 +174,97 @@ def start(argv):
 		hosts=search.get_hostnames()
 		all_hosts.extend(hosts)
 		all_emails.extend(emails)
-
+	#Results############################################################
 	print "\n[+] Emails found:"
-	print " -------------"
+	print "------------------"
 	if all_emails ==[]:
 		print "No emails found"
 	else:
 		for emails in all_emails:
 			print emails 
-	print "\n[+] Hosts found"
-	print " -----------"
+
+	print "\n[+] Hosts found in search engines:"
+	print "------------------------------------"
 	if all_hosts == []:
 		print "No hosts found"
 	else:
 		full_host=hostchecker.Checker(all_hosts)
 		full=full_host.check()
-		vhost=[]
 		for host in full:
-			print host
 			ip=host.split(':')[0]
+			print host
 			if host_ip.count(ip.lower()):
 				pass
 			else:
 				host_ip.append(ip.lower())
+	#Google SET for hosts discovered#####################################
+	names_for_set=[]
+	for x in all_hosts:
+		names_for_set.append(x.split(".")[0])
+	search=googlesets.search_google_labs(names_for_set)
+	search.process()
+	setresults=search.get_set()
+	print "\n[+] Proposed SET"
+	print "---------------"
+	print setresults
+	
+	#DNS reverse lookup#################################################
+	dnsrev=[]
+	if dnslookup==True:
+		print "\n[+] Starting active queries:"
+		analyzed_ranges=[]
+		for x in full:
+			ip=x.split(":")[0]
+			range=ip.split(".")
+			range[3]="0/24"
+			range=string.join(range,'.')
+			if not analyzed_ranges.count(range):
+				print "[-]Performing reverse lookup in :" + range
+				a=dnssearch.dns_reverse(range,True)
+				a.list()
+				res=a.process()
+				analyzed_ranges.append(range)
+			else:
+				continue
+			for x in res:
+				if x.count(word):
+					dnsrev.append(x)
+					if x not in full:
+						full.append(x)
+		print "Hosts found after reverse lookup:"
+		print "---------------------------------"
+		for xh in dnsrev:
+			print xh
+	#DNS Brute force####################################################
+	dnsres=[]
+	if dnsbrute==True:
+		print "[-] Starting DNS brute force:"
+		a=dnssearch.dns_force(word,dnsserver,verbose=True)
+		res=a.process()
+		print "[+] Hosts found after DNS brute force:"
+		for y in res:
+			print y
+			dnsres.append(y)
+			if y not in full:
+				full.append(y)
+	#DNS TLD expansion###################################################
+	dnstldres=[]
+	if dnstld==True:
+		print "[-] Starting DNS TLD expansion:"
+		a=dnssearch.dns_tld(word,dnsserver,verbose=True)
+		res=a.process()
+		print "\n[+] Hosts found after DNS TLD expansion:"
+		print "=========================================="
+		for y in res:
+			print y
+			dnstldres.append(y)
+			if y not in full:
+				full.append(y)
+	
+	#Virtual hosts search###############################################
 	if virtual == "basic":
 		print "[+] Virtual hosts:"
-		print "----------------"
+		print "=================="
 		for l in host_ip:
 			search=bingsearch.search_bing(l,limit,start)
  			search.process_vhost()
@@ -187,11 +274,35 @@ def start(argv):
 				vhost.append(l+":"+x)
 				full.append(l+":"+x)
 	else:
-		pass #Here i need to add explosion mode.
+		pass
+	shodanres=[]
+	shodanvisited=[]
+	if shodan == True:
+		print "[+] Shodan Database search:"
+		for x in full:
+			try:
+				ip=x.split(":")[0]
+				if not shodanvisited.count(ip):
+					print "\tSearching for: " + x 
+					a=shodansearch.search_shodan(ip)
+					shodanvisited.append(ip)
+					results=a.run()
+					for res in results:
+						shodanres.append(x+"SAPO"+str(res['banner'])+"SAPO"+str(res['port']))
+			except:
+				pass
+		print "[+] Shodan results:"
+		print "==================="
+		for x in shodanres:
+			print x.split("SAPO")[0] +":"+ x.split("SAPO")[1]
+	else:
+		pass
+
+	###################################################################
+	#Here i need to add explosion mode.
 	#Tengo que sacar los TLD para hacer esto.
-	recursion=None	
+	recursion= None	
 	if recursion:
-		limit=300
 		start=0
 		for word in vhost:
 			search=googlesearch.search_google(word,limit,start)
@@ -202,20 +313,27 @@ def start(argv):
 			print hosts
 	else:
 		pass
-	if filename!="":
-		file = open(filename,'w')
-		file.write('<theHarvester>')
-		for x in all_emails:
-			file.write('<email>'+x+'</email>')
-		for x in all_hosts:
-			file.write('<host>'+x+'</host>')
-		for x in vhosts:
-			file.write('<vhost>'+x+'</vhost>')
-		file.write('</theHarvester>')
-		file.close
-		print "Results saved in: "+ filename
-	else:
-		pass
+	
+	if filename!="":	
+		try:
+			print "Saving file"
+			html = htmlExport.htmlExport(all_emails,full,vhost,dnsres,dnsrev,filename,word,shodanres,dnstldres)
+			save = html.writehtml()
+			sys.exit()
+		except Exception,e:
+			print e	
+			print "Error creating the file"
+	filename = filename.split(".")[0]+".xml"
+	file = open(filename,'w')
+	file.write('<theHarvester>')
+	for x in all_emails:
+		file.write('<email>'+x+'</email>')
+	for x in all_hosts:
+		file.write('<host>'+x+'</host>')
+	for x in vhost:
+		file.write('<vhost>'+x+'</vhost>')
+	file.write('</theHarvester>')
+	file.close
 
 		
 if __name__ == "__main__":
