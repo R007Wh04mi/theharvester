@@ -87,9 +87,9 @@ class search_google:
 		return rawres.profiles()
 
 	def process(self):
-		while self.counter <= self.limit:
+		while self.counter <= self.limit and self.counter <= 1000:
 			self.do_search()
-			more = self.check_next()
+			#more = self.check_next()
 			time.sleep(1)
 			print "\tSearching "+ str(self.counter) + " results..."
 			self.counter+=100
@@ -109,9 +109,6 @@ class search_google:
 		while self.counter < self.limit:
 			self.do_search_profiles()
 			time.sleep(0.3)
-			more = self.check_next()
-			if more == "1":
-				self.counter+=100
-			else:
-				break
+			self.counter+=100
+			print "\tSearching "+ str(self.counter) + " results..."
 	
