@@ -1,7 +1,8 @@
 *********************************
-*theHarvester 2.2               *
+*theHarvester 2.1 REBORN        *
 *Coded by Christian Martorella  *
 *cmartorella@edge-security.com  *
+*Blackhat Arsenal 2011 edition  *
 *********************************
 
 What is this?
@@ -86,5 +87,5 @@ http://code.google.com/p/theharvester/
 Thanks:
 -------
 John Matherly -  SHODAN project
-
+Lee Baird for suggestions and bugs reporting
 
