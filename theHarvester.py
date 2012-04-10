@@ -20,7 +20,7 @@ def usage():
 
  print "Usage: theharvester options \n"
  print "       -d: Domain to search or company name"
- print "       -b: Data source (google,bing,bingapi,pgp,linkedin,google-profiles,exalead,all)"
+ print "       -b: Data source (google,bing,bingapi,pgp,linkedin,google-profiles,people123,jigsaw,all)"
  print "       -s: Start in result number X (default 0)"
  print "       -v: Verify host name via dns resolution and search for virtual hosts"
  print "       -f: Save the results into an HTML and XML file"
@@ -80,9 +80,9 @@ def start(argv):
 			dnstld=True
 		elif opt == '-b':
 			engine = arg
-			if engine not in ("google", "linkedin", "pgp", "all","google-profiles","exalead","bing","bing_api","yandex"):
+			if engine not in ("google", "linkedin", "pgp", "all","google-profiles","bing","bing_api","yandex","people123","jigsaw"):
 				usage()
-				print "Invalid search engine, try with: bing, google, linkedin, pgp"
+				print "Invalid search engine, try with: bing, google, linkedin, pgp, exalead, jigsaw, bing_api, people123, google-profiles"
 				sys.exit()
 			else:
 				pass
@@ -120,6 +120,28 @@ def start(argv):
 		search.process()
 		all_emails=search.get_emails()
 		all_hosts=search.get_hostnames()
+	elif engine == "people123":
+		print "[-] Searching in 123People.."
+		search = people123.search_123people(word,limit)
+		search.process()
+		people = search.get_people()
+		print "Users from 123People:"
+		print "====================="
+		for user in people:
+			print user
+		sys.exit()
+	elif engine == "jigsaw":
+		print "[-] Searching in Jigsaw.."
+		search = jigsaw.search_jigsaw(word,limit)
+		search.process()
+		people = search.get_people()
+		print "Users from Jigsaw:"
+		print "====================="
+		for user in people:
+			print user
+		sys.exit()
+
+
 	elif engine == "linkedin":
 		print "[-] Searching in Linkedin.."
 		search=linkedinsearch.search_linkedin(word,limit)
@@ -197,16 +219,6 @@ def start(argv):
 				pass
 			else:
 				host_ip.append(ip.lower())
-	#Google SET for hosts discovered#####################################
-	names_for_set=[]
-	for x in all_hosts:
-		names_for_set.append(x.split(".")[0])
-	search=googlesets.search_google_labs(names_for_set)
-	search.process()
-	setresults=search.get_set()
-	print "\n[+] Proposed SET"
-	print "---------------"
-	print setresults
 	
 	#DNS reverse lookup#################################################
 	dnsrev=[]
@@ -270,7 +282,7 @@ def start(argv):
  			search.process_vhost()
  			res=search.get_allhostnames()
 			for x in res:
-				print l+":"+x
+				print l+"\t"+x
 				vhost.append(l+":"+x)
 				full.append(l+":"+x)
 	else:
@@ -280,6 +292,7 @@ def start(argv):
 	if shodan == True:
 		print "[+] Shodan Database search:"
 		for x in full:
+			print x
 			try:
 				ip=x.split(":")[0]
 				if not shodanvisited.count(ip):

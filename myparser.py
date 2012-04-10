@@ -50,18 +50,46 @@ class parser:
 	
 	def people_linkedin(self):
 		reg_people = re.compile('">[a-zA-Z0-9._ -]* profiles | LinkedIn')
-		
 		self.temp = reg_people.findall(self.results)
+		reg_people2 = re.compile('">[a-zA-Z0-9._ -]* - [a-zA-Z0-9._ -]*| LinkedIn')
+		self.temp2 = reg_people2.findall(self.results)
+		self.tempmix = self.temp + self.temp2
 		resul = []
-		for x in self.temp:
+		for x in self.tempmix:
 				y = string.replace(x, '  LinkedIn', '')
 				y = string.replace(y, ' profiles ', '')
 				y = string.replace(y, 'LinkedIn', '')
 				y = string.replace(y, '"', '')
 				y = string.replace(y, '>', '')
+				y = string.split(y," -")[0]
 				if y !=" ":
 					resul.append(y)
-		return resul
+		self.temp = resul
+		results = self.unique()
+		return results
+
+	def people_123people(self):
+		reg_people = re.compile('www\.123people\.com/s/[a-zA-Z0-9.-_]*\+[a-zA-Z0-9.-_]*\+?[a-zA-Z0-9.-_]*\"')
+		self.temp = reg_people.findall(self.results)
+		self.temp2 = []
+		for x in self.temp:
+			y=x.replace("www.123people.com/s/","")
+			y=y.replace('"','')	
+			self.temp2.append(y)
+		return self.temp2
+
+	def people_jigsaw(self):
+		res=[]
+		#reg_people = re.compile("'tblrow' title='[a-zA-Z0-9.-]*'><span class='nowrap'/>")
+		reg_people = re.compile("href=javascript:showContact\('[0-9]*'\)>[a-zA-Z0-9., ]*</a></span>")
+		self.temp = reg_people.findall(self.results)
+		for x in self.temp:
+			a=x.split('>')[1].replace("</a","")
+			res.append(a)	
+		return res
+
+
+
 
 	def profiles(self):
 		reg_people = re.compile('">[a-zA-Z0-9._ -]* - <em>Google Profile</em>')
@@ -109,6 +137,7 @@ class parser:
 	def unique(self):
 		self.new=[]
 		for x in self.temp:
-			if x not in self.new:
-				self.new.append(x)
+			if x[0] != "@":
+				if x not in self.new:
+					self.new.append(x)
 		return self.new
