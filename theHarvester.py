@@ -10,7 +10,7 @@ from lib import htmlExport
 from lib import hostchecker
 
 print "\n*************************************"
-print "*TheHarvester Ver. 2.0 (reborn)     *"
+print "*TheHarvester Ver. 2.2              *"
 print "*Coded by Christian Martorella      *"
 print "*Edge-Security Research             *"
 print "*cmartorella@edge-security.com      *"
