@@ -13,16 +13,16 @@ class search_bing:
 		self.apiserver="api.search.live.net"
 		self.hostname="www.bing.com"
 		self.userAgent="(Mozilla/5.0 (Windows; U; Windows NT 6.0;en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6"
-		self.quantity="100"
+		self.quantity="50"
 		self.limit=int(limit)
 		self.bingApi=""
 		self.counter=start
 		
 	def do_search(self):
 		h = httplib.HTTP(self.server)
-		h.putrequest('GET', "/search?q=" + self.word + "&first="+ str(self.counter))
+		h.putrequest('GET', "/search?q=%40" + self.word + "&count=50&first="+ str(self.counter))
 		h.putheader('Host', self.hostname)
-		h.putheader('Cookie: SRCHHPGUSR=ADLT=OFF&NRSLT=100')
+		h.putheader('Cookie: SRCHHPGUSR=ADLT=DEMOTE&NRSLT=50')
 		h.putheader('Accept-Language: en-us,en')
 		h.putheader('User-agent', self.userAgent)	
 		h.endheaders()
@@ -77,10 +77,10 @@ class search_bing:
 			else:
 				self.do_search()
 				time.sleep(1)
-			self.counter+=100
+			self.counter+=50
 			print "\tSearching "+ str(self.counter) + " results..."
 
 	def process_vhost(self):
 		while (self.counter < self.limit):#Maybe it is good to use other limit for this.
 			self.do_search_vhost()
-			self.counter+=100
+			self.counter+=50
