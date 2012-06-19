@@ -12,23 +12,25 @@ class search_exalead:
 		self.totalresults=""
 		self.server="www.exalead.com"
 		self.hostname="www.exalead.com"
-		self.userAgent="(Mozilla/5.0 (Windows; U; Windows NT 6.0;en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6"
+		self.userAgent="(Mozilla/5.0 (Windows; U; Windows NT 6.0;en-US; rv:1.9.2) Gecko/20100115 Firefox/4.0"
 		self.limit=limit
 		self.counter=start
 		
 	def do_search(self):
 		h = httplib.HTTP(self.server)
-		h.putrequest('GET', "/search/web/results/?q=%40"+ self.word + "&elements_per_page=100&start_index="+str(self.counter))
+		h.putrequest('GET', "/search/web/results/?q=%40"+ self.word + "&elements_per_page=50&start_index="+str(self.counter))
 		h.putheader('Host', self.hostname)
+		h.putheader('Referer', "http://"+self.hostname+"/search/web/results/?q=%40"+self.word)
 		h.putheader('User-agent', self.userAgent)	
 		h.endheaders()
 		returncode, returnmsg, headers = h.getreply()
 		self.results = h.getfile().read()
 		self.totalresults+= self.results
+		print self.results
 
 	def do_search_files(self,files):
 		h = httplib.HTTP(self.server)
-		h.putrequest('GET', "search/web/results/?q="+ self.word + "filetype:"+ self.files +"&elements_per_page=100&start_index="+self.counter)
+		h.putrequest('GET', "search/web/results/?q="+ self.word + "filetype:"+ self.files +"&elements_per_page=50&start_index="+self.counter)
 		h.putheader('Host', self.hostname)
 		h.putheader('User-agent', self.userAgent)	
 		h.endheaders()
@@ -62,7 +64,7 @@ class search_exalead:
 	def process(self):
 		while self.counter <= self.limit:
 			self.do_search()
-			self.counter+=100
+			self.counter+=50
 			print "\tSearching " + str(self.counter) + " results..."
 			
 				
@@ -72,7 +74,7 @@ class search_exalead:
 			time.sleep(1)
 			more = self.check_next()
 			if more == "1":
-				self.counter+=100
+				self.counter+=50
 			else:
 				break
 
