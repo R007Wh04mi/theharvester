@@ -5,7 +5,7 @@ class search_shodan():
 	def __init__(self,host):
 		self.host=host
 		self.key = ""
-		if self.api =="":
+		if self.key =="":
 			print "You need an API key in order to use SHODAN database. You can get one here: http://www.shodanhq.com/"
 			sys.exit()
 		self.api = WebAPI(self.key)
