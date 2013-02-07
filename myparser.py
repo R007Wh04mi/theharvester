@@ -138,7 +138,8 @@ class parser:
 	def unique(self):
 		self.new=[]
 		for x in self.temp:
-			if x[0] != "@":
-				if x.lower() not in self.new:
-					self.new.append(x)
+			if x != "":
+				if x[0] != "@":
+					if x.lower() not in self.new:
+						self.new.append(x)
 		return self.new
