@@ -1,8 +1,7 @@
 *********************************
-*theHarvester 2.1 REBORN        *
+*theHarvester 2.2a              *
 *Coded by Christian Martorella  *
 *cmartorella@edge-security.com  *
-*Blackhat Arsenal 2011 edition  *
 *********************************
 
 What is this?
@@ -42,6 +41,11 @@ Active:
 Dependencies:
 ------------
 none
+
+Changelog 2.2a:
+---------------
+-Fixed Linkedin parser (thanks Alton Johnson and Francesco Stillavato)
+-New banner with superpowers
 
 Changelogin 2.2:
 ----------------
